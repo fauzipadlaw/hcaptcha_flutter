@@ -1,0 +1,1 @@
+../../../../.symlinks/plugins/hcaptcha_flutter/ios/Classes/HCaptchaFlutterPlugin.h
