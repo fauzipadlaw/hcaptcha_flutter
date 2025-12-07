@@ -68,6 +68,12 @@
       "languageVersion": "3.8"
     },
     {
+      "name": "flutter_web_plugins",
+      "rootUri": "file:///Users/efzet/SDKs/flutter/packages/flutter_web_plugins",
+      "packageUri": "lib/",
+      "languageVersion": "3.8"
+    },
+    {
       "name": "fuchsia_remote_debug_protocol",
       "rootUri": "file:///Users/efzet/SDKs/flutter/packages/fuchsia_remote_debug_protocol",
       "packageUri": "lib/",

@@ -1,6 +1,6 @@
 name: hcaptcha_flutter
-description: "HCaptcha for Flutter."
-version: 0.0.2
+description: "HCaptcha for Flutter. Supports Android, iOS, and Web platforms."
+version: 0.0.3
 homepage: https://www.kjxbyz.com/flutterfleet
 repository: https://github.com/FlutterFleet/FlutterFleet/tree/main/packages/hcaptcha_flutter
 
@@ -10,6 +10,8 @@ environment:
 
 dependencies:
   flutter:
+    sdk: flutter
+  flutter_web_plugins:
     sdk: flutter
   plugin_platform_interface: ^2.1.8
 
@@ -42,6 +44,9 @@ flutter:
         pluginClass: HCaptchaFlutterPlugin
       ios:
         pluginClass: HCaptchaFlutterPlugin
+      web:
+        pluginClass: HCaptchaFlutterWeb
+        fileName: hcaptcha_flutter_web.dart
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:

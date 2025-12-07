@@ -1,3 +1,12 @@
+## 0.0.3
+
+* feat: Added web platform support
+* feat: Implemented HCaptchaFlutterWeb using dart:html and dart:js
+* feat: Added automatic hCaptcha JavaScript SDK loading for web
+* feat: Enhanced example app with better UI and platform detection
+* docs: Updated README with comprehensive web platform documentation
+* docs: Added platform support table and web-specific notes
+
 ## 0.0.2
 
 * feat: Updated to support Flutter 3.38.4
