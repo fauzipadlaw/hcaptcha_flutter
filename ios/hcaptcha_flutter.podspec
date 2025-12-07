@@ -18,9 +18,9 @@ HCaptcha for Flutter.
   s.module_map = 'Classes/HCaptchaFlutterPlugin.modulemap'
   s.static_framework = true
   s.dependency 'Flutter'
-  s.dependency 'HCaptcha', '2.5.1'
-  s.platform = :ios, '11.0'
-  s.ios.deployment_target = '11.0'
+  s.dependency 'HCaptcha', '~> 2.7.0'
+  s.platform = :ios, '12.0'
+  s.ios.deployment_target = '12.0'
   s.swift_version  = '5.0'
   s.xcconfig = {
     'LIBRARY_SEARCH_PATHS' => '$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)/ $(SDKROOT)/usr/lib/swift',

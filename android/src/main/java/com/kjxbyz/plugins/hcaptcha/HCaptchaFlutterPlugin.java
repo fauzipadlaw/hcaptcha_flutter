@@ -28,7 +28,6 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.common.PluginRegistry;
 
 public class HCaptchaFlutterPlugin implements FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware {
   private static final String TAG = "HCaptchaFlutterPlugin";
@@ -41,12 +40,7 @@ public class HCaptchaFlutterPlugin implements FlutterPlugin, MethodChannel.Metho
   private HCaptchaDelegateImpl delegate;
   private ActivityPluginBinding activityPluginBinding;
 
-  @SuppressWarnings("deprecation")
-  public static void registerWith(io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
-    HCaptchaFlutterPlugin instance = new HCaptchaFlutterPlugin();
-    instance.initInstance(registrar.messenger(), registrar.context());
-    instance.setUpRegistrar(registrar);
-  }
+
 
   @VisibleForTesting
   public void initInstance(BinaryMessenger messenger, Context context) {
@@ -55,11 +49,7 @@ public class HCaptchaFlutterPlugin implements FlutterPlugin, MethodChannel.Metho
     channel.setMethodCallHandler(this);
   }
 
-  @VisibleForTesting
-  @SuppressWarnings("deprecation")
-  public void setUpRegistrar(PluginRegistry.Registrar registrar) {
-    delegate.setUpRegistrar(registrar);
-  }
+
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPlugin.FlutterPluginBinding binding) {
@@ -93,12 +83,10 @@ public class HCaptchaFlutterPlugin implements FlutterPlugin, MethodChannel.Metho
 
   private void attachToActivity(ActivityPluginBinding activityPluginBinding) {
     this.activityPluginBinding = activityPluginBinding;
-    activityPluginBinding.addActivityResultListener(delegate);
     delegate.setActivity(activityPluginBinding.getActivity());
   }
 
   private void disposeActivity() {
-    activityPluginBinding.removeActivityResultListener(delegate);
     delegate.setActivity(null);
     activityPluginBinding = null;
   }
@@ -130,15 +118,12 @@ public class HCaptchaFlutterPlugin implements FlutterPlugin, MethodChannel.Metho
 
   }
 
-  public static class HCaptchaDelegateImpl implements IHCaptchaDelegate, PluginRegistry.ActivityResultListener {
+  public static class HCaptchaDelegateImpl implements IHCaptchaDelegate {
     private static final String TAG = "HCaptchaDelegateImpl";
 
     private final Context context;
 
     private final MethodChannel channel;
-
-    @SuppressWarnings("deprecation")
-    private PluginRegistry.Registrar registrar;
 
     private Activity activity;
 
@@ -149,24 +134,13 @@ public class HCaptchaFlutterPlugin implements FlutterPlugin, MethodChannel.Metho
       this.channel = channel;
     }
 
-    @SuppressWarnings("deprecation")
-    public void setUpRegistrar(PluginRegistry.Registrar registrar) {
-      this.registrar = registrar;
-      registrar.addActivityResultListener(this);
-    }
-
     public void setActivity(Activity activity) {
       this.activity = activity;
     }
 
     // Only access activity with this method.
     public Activity getActivity() {
-      return registrar != null ? registrar.activity() : activity;
-    }
-
-    @Override
-    public boolean onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-      return false;
+      return activity;
     }
 
     /**
@@ -175,14 +149,14 @@ public class HCaptchaFlutterPlugin implements FlutterPlugin, MethodChannel.Metho
     @Override
     public void show(HashMap<String, Object> config, MethodChannel.Result result) {
       if (ObjectUtils.isEmpty(this.context)) {
-        Log.e(TAG, "HCaptcha上下文为空");
-        result.error(METHOD_SHOW, "HCaptcha上下文为空", null);
+        Log.e(TAG, "HCaptcha context is empty");
+        result.error(METHOD_SHOW, "HCaptcha context is empty", null);
         return;
       }
       try {
         if (ObjectUtils.isEmpty(config)) {
-          Log.e(TAG, "HCaptcha配置为空");
-          result.error(METHOD_SHOW, "HCaptcha配置为空", null);
+          Log.e(TAG, "HCaptcha config is empty");
+          result.error(METHOD_SHOW, "HCaptcha config is empty", null);
           return;
         }
 
@@ -191,8 +165,8 @@ public class HCaptchaFlutterPlugin implements FlutterPlugin, MethodChannel.Metho
         String siteKey = (String) config.get("siteKey");
         String language = StringUtils.defaultIfEmpty((String) config.get("language"), "en");
         if (StringUtils.isEmpty(siteKey)) {
-          Log.e(TAG, "HCaptcha验证码配置中siteKey字段为空");
-          result.error(METHOD_SHOW, "HCaptcha验证码配置中siteKey字段为空", null);
+          Log.e(TAG, "HCaptcha siteKey field is empty in config");
+          result.error(METHOD_SHOW, "HCaptcha siteKey field is empty in config", null);
           return;
         }
 
