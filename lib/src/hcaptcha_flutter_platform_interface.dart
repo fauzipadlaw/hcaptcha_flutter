@@ -1,10 +1,8 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-import 'hcaptcha_flutter_method_channel.dart';
-import 'hcaptcha_flutter_web.dart'
-    if (dart.library.io) 'hcaptcha_flutter_method_channel.dart';
+import 'hcaptcha_flutter_web_factory.dart'
+    if (dart.library.io) 'hcaptcha_flutter_web_stub.dart';
 
 typedef FlutterPluginHandler = Future<dynamic> Function(MethodCall call);
 
@@ -14,8 +12,7 @@ abstract class HCaptchaFlutterPlatform extends PlatformInterface {
 
   static final Object _token = Object();
 
-  static HCaptchaFlutterPlatform _instance =
-      kIsWeb ? HCaptchaFlutterWeb() : MethodChannelHCaptchaFlutter();
+  static HCaptchaFlutterPlatform _instance = createPlatformInstance();
 
   /// The default instance of [HCaptchaFlutterPlatform] to use.
   ///
