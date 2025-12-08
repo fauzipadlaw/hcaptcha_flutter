@@ -64,7 +64,8 @@
       "dependencies": [
         "flutter",
         "flutter_web_plugins",
-        "plugin_platform_interface"
+        "plugin_platform_interface",
+        "web"
       ]
     },
     {
@@ -320,6 +321,11 @@
     {
       "name": "platform",
       "version": "3.1.6",
+      "dependencies": []
+    },
+    {
+      "name": "web",
+      "version": "1.1.1",
       "dependencies": []
     }
   ],
