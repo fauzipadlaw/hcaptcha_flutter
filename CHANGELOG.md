@@ -1,3 +1,12 @@
+## 0.0.4 (Unreleased)
+
+* **BREAKING**: Migrated from deprecated `dart:html` and `dart:js` to `package:web` and `dart:js_interop`
+* feat: Added `web: ^1.1.0` dependency for modern web API support
+* refactor: Updated all DOM manipulation to use `package:web` APIs
+* refactor: Updated JavaScript interop to use `dart:js_interop` with proper type definitions
+* fix: Removed deprecated API warnings for web platform
+* docs: Updated implementation notes to reflect modern web APIs
+
 ## 0.0.3
 
 * feat: Added web platform support

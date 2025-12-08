@@ -16,7 +16,7 @@ December 2024
 ### Architecture
 - **Pattern**: Platform Interface Pattern
 - **Web Implementation**: `HCaptchaFlutterWeb` class extending `HCaptchaFlutterPlatform`
-- **JavaScript Interop**: Using `dart:html` and `dart:js` for browser integration
+- **JavaScript Interop**: Using `package:web` and `dart:js_interop` for browser integration
 - **SDK Loading**: Dynamic script injection from hCaptcha CDN
 
 ### Key Components
@@ -126,11 +126,7 @@ flutter run -d firefox
 
 ## Known Limitations
 
-1. **Deprecated APIs**: Uses `dart:html` and `dart:js` which are deprecated in favor of `package:web` and `dart:js_interop`
-   - **Impact**: Low - Code works correctly, just shows analyzer warnings
-   - **Future Action**: Consider migration in future version
-
-2. **Browser Compatibility**: Tested primarily on modern browsers
+1. **Browser Compatibility**: Tested primarily on modern browsers
    - **Recommendation**: Test on target browsers before production use
 
 3. **Captcha Mode**: Currently only supports invisible mode
@@ -197,11 +193,21 @@ That's it! No code changes needed.
 
 ---
 
+## Migration History
+
+### Version 0.0.4 - Modern Web APIs Migration
+- **Date**: December 2024
+- **Changes**: 
+  - Migrated from deprecated `dart:html` to `package:web`
+  - Migrated from deprecated `dart:js` to `dart:js_interop`
+  - Added proper JavaScript interop type definitions
+  - Removed all deprecation warnings
+- **Impact**: No breaking changes to public API, internal implementation modernized
+
 ## Future Enhancements
 
 ### Potential Improvements
-1. Migrate to `package:web` and `dart:js_interop` (when stable)
-2. Add unit tests for web implementation
+1. Add unit tests for web implementation
 3. Add integration tests
 4. Support for visible captcha mode
 5. Additional configuration options

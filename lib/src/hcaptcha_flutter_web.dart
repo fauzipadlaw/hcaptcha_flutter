@@ -1,11 +1,9 @@
 import 'dart:async';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:js' as js;
+import 'dart:js_interop';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'package:web/web.dart' as web;
 
 import 'hcaptcha_flutter_platform_interface.dart';
 
@@ -20,7 +18,7 @@ class HCaptchaFlutterWeb extends HCaptchaFlutterPlatform {
   static bool _scriptLoaded = false;
   static Completer<void>? _scriptLoadCompleter;
 
-  html.Element? _container;
+  web.HTMLElement? _container;
   String? _widgetId;
   FlutterPluginHandler? _handler;
 
@@ -74,7 +72,7 @@ class HCaptchaFlutterWeb extends HCaptchaFlutterPlatform {
     try {
       // Check if script already exists
       final existingScript =
-          html.document.querySelector('script[src*="hcaptcha.com"]');
+          web.document.querySelector('script[src*="hcaptcha.com"]');
       if (existingScript != null) {
         _scriptLoaded = true;
         _scriptLoadCompleter!.complete();
@@ -82,29 +80,30 @@ class HCaptchaFlutterWeb extends HCaptchaFlutterPlatform {
       }
 
       // Create and inject script
-      final script = html.ScriptElement()
-        ..src = _hcaptchaScriptUrl
-        ..async = true
-        ..defer = true;
+      final script =
+          web.document.createElement('script') as web.HTMLScriptElement
+            ..src = _hcaptchaScriptUrl
+            ..async = true
+            ..defer = true;
 
       final completer = Completer<void>();
 
-      script.onLoad.listen((_) {
+      script.onload = (web.Event event) {
         _scriptLoaded = true;
         completer.complete();
         _scriptLoadCompleter!.complete();
-      });
+      }.toJS;
 
-      script.onError.listen((_) {
+      script.onerror = (web.Event event) {
         final error = PlatformException(
           code: 'SCRIPT_LOAD_FAILED',
           message: 'Failed to load hCaptcha script',
         );
         completer.completeError(error);
         _scriptLoadCompleter!.completeError(error);
-      });
+      }.toJS;
 
-      html.document.head?.append(script);
+      web.document.head?.appendChild(script);
       await completer.future;
     } catch (e) {
       _scriptLoadCompleter!.completeError(e);
@@ -114,10 +113,10 @@ class HCaptchaFlutterWeb extends HCaptchaFlutterPlatform {
 
   /// Ensures the container element exists
   void _ensureContainer() {
-    _container = html.document.getElementById(_containerId);
+    _container = web.document.getElementById(_containerId) as web.HTMLElement?;
 
     if (_container == null) {
-      _container = html.DivElement()
+      _container = web.document.createElement('div') as web.HTMLDivElement
         ..id = _containerId
         ..style.position = 'fixed'
         ..style.top = '0'
@@ -127,7 +126,7 @@ class HCaptchaFlutterWeb extends HCaptchaFlutterPlatform {
         ..style.zIndex = '999999'
         ..style.display = 'none';
 
-      html.document.body?.append(_container!);
+      web.document.body?.appendChild(_container!);
     }
   }
 
@@ -145,19 +144,22 @@ class HCaptchaFlutterWeb extends HCaptchaFlutterPlatform {
     }
 
     // Clear container
-    _container!.children.clear();
+    while (_container!.firstChild != null) {
+      _container!.removeChild(_container!.firstChild!);
+    }
 
     // Create widget container
-    final widgetContainer = html.DivElement()
-      ..style.position = 'absolute'
-      ..style.top = '50%'
-      ..style.left = '50%'
-      ..style.transform = 'translate(-50%, -50%)';
+    final widgetContainer =
+        web.document.createElement('div') as web.HTMLDivElement
+          ..style.position = 'absolute'
+          ..style.top = '50%'
+          ..style.left = '50%'
+          ..style.transform = 'translate(-50%, -50%)';
 
-    _container!.append(widgetContainer);
+    _container!.appendChild(widgetContainer);
 
     // Create overlay background
-    final overlay = html.DivElement()
+    final overlay = web.document.createElement('div') as web.HTMLDivElement
       ..style.position = 'absolute'
       ..style.top = '0'
       ..style.left = '0'
@@ -166,26 +168,24 @@ class HCaptchaFlutterWeb extends HCaptchaFlutterPlatform {
       ..style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
       ..style.zIndex = '-1';
 
-    _container!.append(overlay);
+    _container!.appendChild(overlay);
 
     // Render hCaptcha
     try {
-      final hcaptcha = js.context['hcaptcha'];
+      final hcaptcha = _getHCaptcha();
 
-      final config = js.JsObject.jsify({
-        'sitekey': siteKey,
-        'size': 'invisible',
-        'hl': language,
-        'callback': _createJsCallback(_onSuccess),
-        'error-callback': _createJsCallback(_onError),
-        'expired-callback': _createJsCallback(_onExpired),
-        'open-callback': _createJsCallback(_onOpen),
-        'close-callback': _createJsCallback(_onClose),
-      });
+      final config = HCaptchaConfig(
+        sitekey: siteKey,
+        size: 'invisible',
+        hl: language,
+        callback: _onSuccess.toJS,
+        errorCallback: _onError.toJS,
+        expiredCallback: _onExpired.toJS,
+        openCallback: _onOpen.toJS,
+        closeCallback: _onClose.toJS,
+      );
 
-      final hcaptchaObj = js.JsObject.fromBrowserObject(hcaptcha);
-      _widgetId = hcaptchaObj
-          .callMethod('render', [widgetContainer, config]).toString();
+      _widgetId = hcaptcha.render(widgetContainer, config).toString();
     } catch (e) {
       throw PlatformException(
         code: 'RENDER_FAILED',
@@ -199,9 +199,8 @@ class HCaptchaFlutterWeb extends HCaptchaFlutterPlatform {
     if (_widgetId == null) return;
 
     try {
-      final hcaptcha = js.context['hcaptcha'];
-      final hcaptchaObj = js.JsObject.fromBrowserObject(hcaptcha);
-      hcaptchaObj.callMethod('execute', [_widgetId]);
+      final hcaptcha = _getHCaptcha();
+      hcaptcha.execute(_widgetId!);
     } catch (e) {
       _invokeHandler('error', {
         'code': 'EXECUTE_FAILED',
@@ -216,9 +215,8 @@ class HCaptchaFlutterWeb extends HCaptchaFlutterPlatform {
     if (_widgetId == null) return;
 
     try {
-      final hcaptcha = js.context['hcaptcha'];
-      final hcaptchaObj = js.JsObject.fromBrowserObject(hcaptcha);
-      hcaptchaObj.callMethod('reset', [_widgetId]);
+      final hcaptcha = _getHCaptcha();
+      hcaptcha.reset(_widgetId!);
     } catch (e) {
       // Ignore reset errors
     }
@@ -229,13 +227,17 @@ class HCaptchaFlutterWeb extends HCaptchaFlutterPlatform {
     if (_widgetId == null) return;
 
     try {
-      final hcaptcha = js.context['hcaptcha'];
-      final hcaptchaObj = js.JsObject.fromBrowserObject(hcaptcha);
-      hcaptchaObj.callMethod('remove', [_widgetId]);
+      final hcaptcha = _getHCaptcha();
+      hcaptcha.remove(_widgetId!);
       _widgetId = null;
     } catch (e) {
       // Ignore removal errors
     }
+  }
+
+  /// Gets the hCaptcha JavaScript object
+  HCaptchaJS _getHCaptcha() {
+    return hcaptchaGlobal;
   }
 
   /// Shows the container
@@ -256,7 +258,7 @@ class HCaptchaFlutterWeb extends HCaptchaFlutterPlatform {
   }
 
   /// Callback when hCaptcha encounters an error
-  void _onError(dynamic error) {
+  void _onError([JSAny? error]) {
     _invokeHandler('error', {
       'code': 'HCAPTCHA_ERROR',
       'msg': error?.toString() ?? 'Unknown error',
@@ -286,17 +288,6 @@ class HCaptchaFlutterWeb extends HCaptchaFlutterPlatform {
     _hideContainer();
   }
 
-  /// Creates a JavaScript callback function
-  js.JsFunction _createJsCallback(Function dartFunction) {
-    return js.JsFunction.withThis((thisArg, [arg1, arg2, arg3]) {
-      if (arg1 != null) {
-        return dartFunction(arg1);
-      } else {
-        return dartFunction();
-      }
-    });
-  }
-
   /// Invokes the method call handler
   void _invokeHandler(String method, dynamic arguments) {
     if (_handler != null) {
@@ -304,4 +295,50 @@ class HCaptchaFlutterWeb extends HCaptchaFlutterPlatform {
       _handler!(call);
     }
   }
+}
+
+// JavaScript interop definitions for hCaptcha API
+@JS('hcaptcha')
+external HCaptchaJS get hcaptchaGlobal;
+
+@JS()
+@staticInterop
+class HCaptchaJS {}
+
+extension HCaptchaJSExtension on HCaptchaJS {
+  external JSAny render(web.HTMLElement container, HCaptchaConfig config);
+  external void execute(String widgetId);
+  external void reset(String widgetId);
+  external void remove(String widgetId);
+}
+
+@JS()
+@anonymous
+@staticInterop
+class HCaptchaConfig {
+  external factory HCaptchaConfig({
+    required String sitekey,
+    required String size,
+    required String hl,
+    required JSFunction callback,
+    required JSFunction errorCallback,
+    required JSFunction expiredCallback,
+    required JSFunction openCallback,
+    required JSFunction closeCallback,
+  });
+}
+
+extension HCaptchaConfigExtension on HCaptchaConfig {
+  external String get sitekey;
+  external String get size;
+  external String get hl;
+  external JSFunction get callback;
+  @JS('error-callback')
+  external JSFunction get errorCallback;
+  @JS('expired-callback')
+  external JSFunction get expiredCallback;
+  @JS('open-callback')
+  external JSFunction get openCallback;
+  @JS('close-callback')
+  external JSFunction get closeCallback;
 }
